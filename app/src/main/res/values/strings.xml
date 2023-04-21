@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">dbCache</string>
+    <string name="move_to_cache">&lt;&lt;&lt;</string>
+    <string name="add">add</string>
+    <string name="delete">delete</string>
+    <string name="alter">alter</string>
+    <string name="apply_cache">apply</string>
+    <string name="reset_cache">reset</string>
+    <string name="reset_db">reset</string>
+    <string name="expand">+</string>
+    <string name="collapse">-</string>
+    <string name="node">node</string>
+    <string name="dialog_element">Put the name of the element</string>
+    <string name="positive_answer">OK</string>
+    <string name="negative_answer">ABORT</string>
+    <string name="dialog_add">New element name</string>
+    <string name="dialog_edit">Edit element name</string>
+</resources>
