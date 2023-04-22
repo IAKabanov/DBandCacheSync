@@ -57,7 +57,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/database_cache_wrapper"
-        android:name="com.ikabanov.cache.cache.CacheFragment"
+        android:name="com.ikabanov.cache.view.CacheFragment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fillViewport="true"

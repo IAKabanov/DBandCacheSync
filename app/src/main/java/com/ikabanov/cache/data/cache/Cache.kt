@@ -1,6 +1,6 @@
 package com.ikabanov.cache.data.cache
 
-import com.ikabanov.cache.cache.Reason
+import com.ikabanov.cache.Reason
 import com.ikabanov.cache.data.db.Element
 
 object Cache : ICacheContract {

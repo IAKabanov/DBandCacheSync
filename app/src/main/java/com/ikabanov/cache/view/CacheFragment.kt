@@ -1,4 +1,4 @@
-package com.ikabanov.cache.cache
+package com.ikabanov.cache.view
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -25,28 +25,17 @@ import com.ikabanov.cache.data.cache.ElementCache
 import com.ikabanov.cache.data.cache.ICacheContract
 import com.ikabanov.cache.data.db.Element
 import com.ikabanov.cache.domain.*
-import com.ikabanov.cache.view.CacheViewHolder
-import com.ikabanov.cache.view.TreeNodeWrapper
 
-enum class Reason {
-    DONE,
-    DONE_NEGATIVE,
-    ABORTED,
-    NONE,
-    CUSTOM
-}
-
-class CacheFragment : Fragment(), ICacheFragmentReceiver, ICacheFragmentInteraction {
+class CacheFragment : Fragment(), ICacheFragmentInteraction, ICacheFragmentReceiver {
     val cache: ICacheContract = Cache
     private var treeViewAdapter: TreeViewAdapter? = null
-    private var addMode = false
     private var deleteMode = false
     private var alterMode = false
-    private val TAG = "CacheFragment"
     private lateinit var dialogEditText: EditText
     private lateinit var dialogTitle: TextView
     private var dialog: AlertDialog? = null
     private var selectedTreeNodeWrapper: TreeNodeWrapper? = null
+    var presenter: MainActivityPresenter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,26 +60,18 @@ class CacheFragment : Fragment(), ICacheFragmentReceiver, ICacheFragmentInteract
         val view: View = inflater.inflate(R.layout.fragment_db, container, false)
         val recyclerView = view.findViewById<RecyclerView>(R.id.database)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        recyclerView.isNestedScrollingEnabled = false
+        recyclerView.isNestedScrollingEnabled = true
         val factory =
             TreeViewHolderFactory { v: View, _: Int -> CacheViewHolder(v) }
         treeViewAdapter = TreeViewAdapter(factory)
         recyclerView.adapter = treeViewAdapter
 
-        treeViewAdapter!!.setTreeNodeClickListener { treeNode: TreeNode, nodeView: View? ->
-            Log.d(
-                TAG,
-                "Click on TreeNode with value " + treeNode.value.toString()
-            )
-        }
         treeViewAdapter!!.setTreeNodeLongClickListener { treeNode: TreeNode, nodeView: View? ->
-            Log.d(
-                TAG,
-                "LongClick on TreeNode with value " + treeNode.value.toString()
-            )
-            selectedTreeNodeWrapper = treeNode as TreeNodeWrapper
-            onLongClickOnTreeItem()
+            presenter?.selectedInCache(treeNode as TreeNodeWrapper)
 
+            //selectedTreeNodeWrapper = treeNode as TreeNodeWrapper
+
+            //onLongClickOnTreeItem()
             true
         }
         return view
@@ -101,7 +82,7 @@ class CacheFragment : Fragment(), ICacheFragmentReceiver, ICacheFragmentInteract
         refresh()
     }
 
-    private fun refresh() {
+    fun refresh() {
         val elementsSorted = cache.getElementsWithTreeRelations()
         treeViewAdapter!!.updateTreeNodes(fillViewTree(elementsSorted))
     }
@@ -126,45 +107,9 @@ class CacheFragment : Fragment(), ICacheFragmentReceiver, ICacheFragmentInteract
     }
 
     override fun addElement(reason: Reason) {
-        addMode = !addMode
-        handleAddModeState(addMode, reason)
-    }
-
-    private fun handleAddModeState(
-        enabled: Boolean,
-        reason: Reason,
-        customMessage: String? = null
-    ) {
-        val message = when (reason) {
-            Reason.DONE -> "New node added in cache successfully"
-            Reason.DONE_NEGATIVE -> "How did you get there?!"
-            Reason.ABORTED -> "No nodes added"
-            Reason.NONE -> if (enabled) "Adding enabled. Push the node, child will be created." else "Adding disabled."
-            Reason.CUSTOM -> customMessage
-        }
-        Toast.makeText(requireActivity().applicationContext, message, Toast.LENGTH_SHORT).show()
-        (activity as ICacheButtonsNotifier).notifyAddModeEnabled(enabled)
     }
 
     override fun deleteElement(reason: Reason) {
-        deleteMode = !deleteMode
-        handleDeleteModeState(deleteMode, reason)
-    }
-
-    private fun handleDeleteModeState(
-        enabled: Boolean,
-        reason: Reason,
-        customMessage: String? = null
-    ) {
-        val message = when (reason) {
-            Reason.DONE -> "Node marked as deleted in cache successfully"
-            Reason.DONE_NEGATIVE -> "Node unmarked as deleted in cache successfully"
-            Reason.ABORTED -> "No nodes marked (unmarked) as deleted"
-            Reason.NONE -> if (enabled) "Deleting enabled. Push the node, it will be marked as deleted." else "Deleting disabled."
-            Reason.CUSTOM -> customMessage
-        }
-        Toast.makeText(requireActivity().applicationContext, message, Toast.LENGTH_SHORT).show()
-        (activity as ICacheButtonsNotifier).notifyDeleteModeEnabled(enabled)
     }
 
     override fun alterElement(reason: Reason) {
@@ -172,76 +117,30 @@ class CacheFragment : Fragment(), ICacheFragmentReceiver, ICacheFragmentInteract
         handleAlterModeState(alterMode, reason)
     }
 
+    override fun applyCache(reason: Reason) {
+    }
+
     private fun handleAlterModeState(
         enabled: Boolean,
         reason: Reason,
         customMessage: String? = null
     ) {
-        val message = when (reason) {
-            Reason.DONE -> "Node name changed in cache successfully"
-            Reason.DONE_NEGATIVE -> "How did you get there?!"
-            Reason.ABORTED -> "No nodes renamed"
-            Reason.NONE -> if (enabled) "Altering enabled. Push the node, it will be able to be edited." else "Altering disabled."
-            Reason.CUSTOM -> customMessage
-        }
-        Toast.makeText(requireActivity().applicationContext, message, Toast.LENGTH_SHORT).show()
         (activity as ICacheButtonsNotifier).notifyAlterModeEnabled(enabled)
     }
 
-    override fun applyCache(reason: Reason) {
-        (activity as ICacheFragmentContract).onCacheApplied(cache.getElementsWithTreeRelations())
-        reset()
-    }
-
     override fun reset() {
-        cache.clearCache()
-        refresh()
-        val needToShowMessageAdd = addMode
-        if (needToShowMessageAdd) {
-            addMode = false
-            (activity as ICacheButtonsNotifier).notifyAddModeEnabled(addMode)
-            handleAddModeState(addMode, Reason.ABORTED)
-        }
-
-        val needToShowMessageDelete = deleteMode
-        if (needToShowMessageDelete) {
-            deleteMode = false
-            (activity as ICacheButtonsNotifier).notifyDeleteModeEnabled(addMode)
-            handleAddModeState(deleteMode, Reason.ABORTED)
-        }
     }
 
-    private fun onLongClickOnTreeItem() {
-        if (addMode) {
-            dialogTitle.setText(R.string.dialog_add)
-            dialog?.show()
-        }
-
-        if (deleteMode) {
-            val result = Cache.delete(selectedTreeNodeWrapper!!.value as ElementCache)
-            refresh()
-            deleteElement(result)
-            selectedTreeNodeWrapper = null
-        }
-
-        if (alterMode) {
-            dialogEditText.text = SpannableStringBuilder((selectedTreeNodeWrapper!!.value as ElementCache).name)
-            dialogTitle.setText(R.string.dialog_edit)
-            dialog?.show()
-        }
+    fun setDialogTitle(title: String) {
+        dialogTitle.text = title
     }
 
-    private fun addElement(elementName: String): Reason {
-        if (selectedTreeNodeWrapper != null) {
-            val elementParent = selectedTreeNodeWrapper!!.value as ElementCache
-            val reason = cache.add(
-                Element(elementName, Element(elementParent.name, null)),
-                elementParent.level + 1, false
-            )
-            refresh()
-            return reason
-        }
-        return Reason.ABORTED
+    fun setDialogTitle(title: Int) {
+        dialogTitle.setText(title)
+    }
+
+    fun showDialog() {
+        dialog?.show()
     }
 
     private fun createDialog(activity: Activity?, viewGroup: ViewGroup): AlertDialog? {
@@ -251,42 +150,15 @@ class CacheFragment : Fragment(), ICacheFragmentReceiver, ICacheFragmentInteract
             .setPositiveButton(
                 resources.getText(R.string.positive_answer)
             ) { _, _ ->
-                if (addMode) {
-                    val reason = addElement(dialogEditText.text.toString())
-                    addElement(reason)
-                }
-                if (alterMode) {
-                    val reason = alterElement(dialogEditText.text.toString())
-                    alterElement(reason)
-                }
+                presenter?.nameEntered(dialogEditText.text.toString())
                 dialogEditText.text.clear()
-                selectedTreeNodeWrapper = null
             }
             .setNegativeButton(
                 resources.getText(R.string.negative_answer)
             ) { _, _ ->
-                if (addMode) {
-                    addElement(Reason.ABORTED)
-                }
-                if (alterMode) {
-                    alterElement(Reason.ABORTED)
-                }
+                presenter?.nameEntered(null)
                 dialogEditText.text.clear()
-                selectedTreeNodeWrapper = null
             }
         return builder.create()
-    }
-
-    private fun alterElement(elementName: String): Reason {
-        if (selectedTreeNodeWrapper != null) {
-            val elementParent = selectedTreeNodeWrapper!!.value as ElementCache
-            val reason = cache.alter(
-                ElementCache(elementParent.name, elementParent.parentName),
-                elementName
-            )
-            refresh()
-            return reason
-        }
-        return Reason.ABORTED
     }
 }

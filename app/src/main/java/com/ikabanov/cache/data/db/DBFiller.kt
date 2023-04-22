@@ -2,7 +2,7 @@ package com.ikabanov.cache.data.db
 
 class DBFiller {
     companion object {
-        fun createRoot(): MutableMap<Element, Element> {
+        fun createRoot(): List<Element> {
             val element1 = Element("Node1", null)
             val element2 = Element("Node2", element1)
             val element3 = Element("Node3", element1)
@@ -16,13 +16,13 @@ class DBFiller {
             element1.addChild(element5)
             element5.addChild(element6)
 
-            val result = mutableMapOf<Element, Element>()
-            result[element1] = element1
-            result[element2] = element2
-            result[element3] = element3
-            result[element4] = element4
-            result[element5] = element5
-            result[element6] = element6
+            val result = mutableListOf<Element>()
+            result.add(element1)
+            result.add(element2)
+            result.add(element3)
+            result.add(element4)
+            result.add(element5)
+            result.add(element6)
 
             return result
         }

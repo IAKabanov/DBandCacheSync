@@ -5,5 +5,5 @@ interface IdbContract {
     fun updateElement(oldElement: Element, newElement: Element)
 
     fun resetDB()
-    fun getElementsWithTreeRelations(): List<Element>
+    fun getElements(): List<Element>
 }

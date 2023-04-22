@@ -1,6 +1,6 @@
 package com.ikabanov.cache.domain
 
-import com.ikabanov.cache.cache.Reason
+import com.ikabanov.cache.Reason
 
 interface ICacheFragmentInteraction {
     fun addElement(reason: Reason = Reason.NONE)
