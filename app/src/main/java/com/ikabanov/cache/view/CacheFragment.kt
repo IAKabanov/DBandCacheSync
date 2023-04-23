@@ -84,7 +84,8 @@ class CacheFragment : Fragment(), ICacheFragmentInteraction, ICacheFragmentRecei
 
     fun refresh() {
         val elementsSorted = cache.getElementsWithTreeRelations()
-        treeViewAdapter!!.updateTreeNodes(fillViewTree(elementsSorted))
+        treeViewAdapter?.updateTreeNodes(fillViewTree(elementsSorted))
+        treeViewAdapter?.expandAll()
     }
 
     private fun fillViewTree(elements: List<ElementCache>): List<TreeNode> {

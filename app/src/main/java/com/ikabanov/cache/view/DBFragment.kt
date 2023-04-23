@@ -52,6 +52,7 @@ class DBFragment : Fragment() {
     fun refresh() {
         if (presenter != null) {
             treeViewAdapter!!.updateTreeNodes(presenter!!.fillViewTree())
+            treeViewAdapter?.expandAll()
         }
     }
 }
