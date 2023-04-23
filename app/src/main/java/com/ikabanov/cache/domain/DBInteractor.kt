@@ -5,6 +5,9 @@ import com.ikabanov.cache.data.db.DB
 import com.ikabanov.cache.data.db.Element
 import com.ikabanov.cache.data.db.IdbContract
 
+/**
+ * DBInteractor is a class that should be used to connect MainActivityPresenter and DB.
+ */
 class DBInteractor : IDBInteractor {
     private val db: IdbContract = DB
     override fun addManyElements(elements: List<ElementCache>) {
@@ -28,7 +31,7 @@ class DBInteractor : IDBInteractor {
     override fun getElementsWithTreeRelations(): List<Element> {
         return db.getElements().toMutableList()
             .sorted() // Sorted by its level in the tree. We need that for
-                    // easier finding its relations.
+        // easier finding its relations.
     }
 
     override fun resetDB() {

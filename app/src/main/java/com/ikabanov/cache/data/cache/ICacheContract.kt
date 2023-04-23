@@ -3,6 +3,9 @@ package com.ikabanov.cache.data.cache
 import com.ikabanov.cache.Reason
 import com.ikabanov.cache.data.db.Element
 
+/**
+ * ICacheContract is an interface for interaction with cache.
+ */
 interface ICacheContract {
     fun add(element: Element, level: Int, isFromDB: Boolean = true): Reason
     fun delete(element: ElementCache): Reason

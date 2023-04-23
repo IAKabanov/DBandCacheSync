@@ -6,6 +6,9 @@ import com.ikabanov.cache.data.cache.ElementCache
 import com.ikabanov.cache.data.cache.ICacheContract
 import com.ikabanov.cache.data.db.Element
 
+/**
+ * CacheInteractor is a class that should be used to connect MainActivityPresenter and Cache.
+ */
 class CacheInteractor : ICacheInteractor {
     val cache: ICacheContract = Cache
     override fun addElement(element: Element, level: Int, isFromDB: Boolean): Reason {
@@ -15,7 +18,7 @@ class CacheInteractor : ICacheInteractor {
     override fun getElementsWithTreeRelations(): List<ElementCache> {
         return cache.getElements().toMutableList()
             .sorted() // Sorted by its level in the tree. We need that for
-                    // easier finding its relations.
+        // easier finding its relations.
     }
 
     override fun clearCache() {
@@ -29,6 +32,4 @@ class CacheInteractor : ICacheInteractor {
     override fun editElement(oldElement: ElementCache, newName: String): Reason {
         return cache.alter(oldElement, newName)
     }
-
-
 }

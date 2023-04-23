@@ -3,6 +3,9 @@ package com.ikabanov.cache.data.cache
 import com.ikabanov.cache.Reason
 import com.ikabanov.cache.data.db.Element
 
+/**
+ * Cache is an object, that contains and operates with temporary nodes.
+ */
 object Cache : ICacheContract {
     private val listOfNodes = mutableListOf<ElementCache>()
 
@@ -72,14 +75,15 @@ object Cache : ICacheContract {
 
     override fun getElementsWithTreeRelations(): List<ElementCache> {
         val elements = listOfNodes.sorted()  // Sorted by its level in the tree. We need that for
-                                            // easier finding its relations.
+        // easier finding its relations.
         for (element in elements) {
             for (parentCandidate in elements) { // Go through all the elements to find an element that
                 if (parentCandidate.level == (element.level - 1)) { // has level less than the picked element
                     if (element.parentName == parentCandidate.name) { // element knows its parent name, and if it's equals to the candidate
                         if (!parentCandidate.children.contains(element)) { // check whether we added this child to the parent
                             parentCandidate.children.add(element) // add to children list to the parent
-                            element.hasLocalParent = true // that's a flag to define roots in future. E.g. two nodes, that isn't connected explicitly.
+                            element.hasLocalParent =
+                                true // that's a flag to define roots in future. E.g. two nodes, that isn't connected explicitly.
                             element.parent = parentCandidate
                         }
                         break // Parent has been found. No need to check the other parent candidates. Going to check a new element.

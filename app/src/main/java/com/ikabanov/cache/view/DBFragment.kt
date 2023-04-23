@@ -36,7 +36,7 @@ class DBFragment : Fragment() {
         recyclerView.adapter = treeViewAdapter
 
         refresh()
-        treeViewAdapter!!.setTreeNodeLongClickListener { treeNode: TreeNode, nodeView: View? ->
+        treeViewAdapter!!.setTreeNodeLongClickListener { treeNode: TreeNode, _: View? ->
             sendToCache(treeNode as TreeNodeWrapper)
             true
         }
@@ -49,9 +49,12 @@ class DBFragment : Fragment() {
         }
     }
 
+    /**
+     * refresh is good for use when DB was updated.
+     */
     fun refresh() {
         if (presenter != null) {
-            treeViewAdapter!!.updateTreeNodes(presenter!!.fillViewTree())
+            treeViewAdapter!!.updateTreeNodes(presenter!!.fillDBViewTree())
             treeViewAdapter?.expandAll()
         }
     }

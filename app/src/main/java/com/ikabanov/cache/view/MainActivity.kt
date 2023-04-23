@@ -5,10 +5,8 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.ikabanov.cache.R
-import com.ikabanov.cache.domain.*
 
-
-class MainActivity : AppCompatActivity(), ICacheButtonsNotifier {
+class MainActivity : AppCompatActivity() {
     private lateinit var btnResetDB: Button
     private lateinit var btnApplyCache: Button
     private lateinit var btnResetCache: Button
@@ -56,7 +54,7 @@ class MainActivity : AppCompatActivity(), ICacheButtonsNotifier {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
 
-    override fun notifyAddModeEnabled(enabled: Boolean) {
+    fun notifyAddModeEnabled(enabled: Boolean) {
         if (enabled) {
             btnAddElement.setBackgroundColor(resources.getColor(R.color.purple_200))
             btnDeleteElement.isEnabled = false
@@ -70,7 +68,7 @@ class MainActivity : AppCompatActivity(), ICacheButtonsNotifier {
         }
     }
 
-    override fun notifyDeleteModeEnabled(enabled: Boolean) {
+    fun notifyDeleteModeEnabled(enabled: Boolean) {
         if (enabled) {
             btnDeleteElement.setBackgroundColor(resources.getColor(R.color.purple_200))
             btnAddElement.isEnabled = false
@@ -84,7 +82,7 @@ class MainActivity : AppCompatActivity(), ICacheButtonsNotifier {
         }
     }
 
-    override fun notifyAlterModeEnabled(enabled: Boolean) {
+    fun notifyAlterModeEnabled(enabled: Boolean) {
         if (enabled) {
             btnAlterElement.setBackgroundColor(resources.getColor(R.color.purple_200))
             btnDeleteElement.isEnabled = false

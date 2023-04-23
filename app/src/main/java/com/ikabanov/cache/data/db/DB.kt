@@ -1,5 +1,9 @@
 package com.ikabanov.cache.data.db
 
+/**
+ * DB is object that contains Elements. It represents a database. In this task work is did in Cache
+ * and than merges here.
+ */
 object DB : IdbContract {
     private val listOfNodes = mutableListOf<Element>()
 
@@ -11,7 +15,6 @@ object DB : IdbContract {
         if (listOfNodes.contains(element)) {
             return
         }
-
         val realParentIndex = listOfNodes.indexOf(parent)
         if (realParentIndex == -1) {
             return

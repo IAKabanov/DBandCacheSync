@@ -1,5 +1,8 @@
 package com.ikabanov.cache.data.db
 
+/**
+ * Element is a model of db element. Will be united to ElementCache soon.
+ */
 data class Element(var name: String) : Comparable<Element> {
     var parent: Element? = null
         private set

@@ -8,6 +8,10 @@ import com.ikabanov.cache.data.cache.ElementCache
 import com.ikabanov.cache.data.db.Element
 import com.ikabanov.cache.domain.*
 
+/**
+ * MainActivityPresenter is a presenter, that connects MainActivity, DBFragment, and CacheFragment
+ * to DBInteractor and CacheInteractor.
+ */
 class MainActivityPresenter {
     private var mainActivity: MainActivity? = null
     private var dbFragment: DBFragment? = null
@@ -30,19 +34,56 @@ class MainActivityPresenter {
         this.cacheFragment!!.presenter = this
     }
 
+    /**
+     * resetDB should reset DB, Cache and refresh both corresponding views.
+     */
     fun resetDB() {
         if (dbFragment != null) {
             dbInteractor.resetDB()
-            dbFragment!!.refresh()
+            dbFragment?.refresh()
+        }
+        if (cacheFragment != null) {
+            cacheInteractor.clearCache()
+            cacheFragment?.refresh()
         }
     }
 
-    fun fillViewTree(): List<TreeNode> {
-        val elementsSorted = dbInteractor.getElementsWithTreeRelations()
-        return fillViewTree(elementsSorted)
+    /**
+     * fillCacheViewTree creates a tree to be shown in CacheFragment.
+     */
+    fun fillCacheViewTree(): List<TreeNode> {
+        val elementsSorted = cacheInteractor.getElementsWithTreeRelations()
+        return fillCacheViewTree(elementsSorted)
     }
 
-    private fun fillViewTree(elements: List<Element>): List<TreeNode> {
+    private fun fillCacheViewTree(elements: List<ElementCache>): List<TreeNode> {
+        val roots: MutableList<TreeNode> = ArrayList()
+        for (element in elements) {
+            if (!element.hasLocalParent) { // Find an element, that has no local parent. So it
+                // would be shown as a root. There might be more than one roots.
+                roots.add(getViewOutOfRootElement(element))
+            }
+        }
+        return roots
+    }
+
+    private fun getViewOutOfRootElement(element: ElementCache): TreeNodeWrapper {
+        val root = TreeNodeWrapper(element)
+        for (child in element.children) { // Add children for taken element. Recursively.
+            root.addChild(getViewOutOfRootElement(child))
+        }
+        return root
+    }
+
+    /**
+     * fillDBViewTree creates a tree to be shown in DBFragment.
+     */
+    fun fillDBViewTree(): List<TreeNode> {
+        val elementsSorted = dbInteractor.getElementsWithTreeRelations()
+        return fillDBViewTree(elementsSorted)
+    }
+
+    private fun fillDBViewTree(elements: List<Element>): List<TreeNode> {
         val roots: MutableList<TreeNode> = ArrayList()
         for (element in elements) {
             if (element.parent == null) { // Find an element, that has no local parent. So it
@@ -61,17 +102,18 @@ class MainActivityPresenter {
         return root
     }
 
-    private fun onElementsReceived(elements: List<ElementCache>) {
-        if (dbFragment != null) {
-            dbFragment!!.refresh()
-        }
-    }
-
-
+    /**
+     * onSendToCacheTriggered invokes after long click on any node in DBFragment. Basically it
+     * creates the copy in Cache of the selected node in DB.
+     */
     fun onSendToCacheTriggered(node: TreeNodeWrapper) {
-        cacheFragment!!.onTreeViewReceived(node.value as Element, node.level)
+        cacheInteractor.addElement(node.value as Element, node.level, true)
+        cacheFragment?.refresh()
     }
 
+    /**
+     * applyCache moves all the data from Cache to the DB.
+     */
     fun applyCache() {
         val elementsSorted = cacheInteractor.getElementsWithTreeRelations()
         dbInteractor.addManyElements(elementsSorted)
@@ -103,6 +145,9 @@ class MainActivityPresenter {
         }
     }
 
+    /**
+     * resetCache clears the Cache and aborts mode if enabled.
+     */
     fun resetCache() {
         cacheInteractor.clearCache()
         cacheFragment?.refresh()
@@ -115,13 +160,6 @@ class MainActivityPresenter {
         }
         mainActivity?.showToast(createMessage(Mode.NONE, Reason.ABORTED))
         mode = Mode.NONE
-    }
-
-    fun addElement(reason: Reason = Reason.NONE) {
-        mainActivity?.showToast(createMessage(mode, reason))
-        mode = if (mode == Mode.ADDITION) Mode.NONE else Mode.ADDITION
-        val add = mode == Mode.ADDITION
-        mainActivity?.notifyAddModeEnabled(add)
     }
 
     private fun addElement(elementName: String): Reason {
@@ -146,6 +184,23 @@ class MainActivityPresenter {
         return Reason.ABORTED
     }
 
+    /**
+     * addElement is invoked when adding is enabled (disabled).
+     * @param reason is the respond from CacheInteractor or default Reason.NONE. It's used to
+     * create message to show and do some buttons enabling (disabling).
+     */
+    fun addElement(reason: Reason = Reason.NONE) {
+        mainActivity?.showToast(createMessage(mode, reason))
+        mode = if (mode == Mode.ADDITION) Mode.NONE else Mode.ADDITION
+        val add = mode == Mode.ADDITION
+        mainActivity?.notifyAddModeEnabled(add)
+    }
+
+    /**
+     * deleteElement is invoked when deleting is enabled (disabled).
+     * @param reason is the respond from CacheInteractor or default Reason.NONE. It's used to
+     * create message to show and do some buttons enabling (disabling).
+     */
     fun deleteElement(reason: Reason = Reason.NONE) {
         mainActivity?.showToast(createMessage(mode, reason))
         mode = if (mode == Mode.DELETION) Mode.NONE else Mode.DELETION
@@ -153,6 +208,11 @@ class MainActivityPresenter {
         mainActivity?.notifyDeleteModeEnabled(del)
     }
 
+    /**
+     * alterElement is invoked when altering is enabled (disabled).
+     * @param reason is the respond from CacheInteractor or default Reason.NONE. It's used to
+     * create message to show and do some buttons enabling (disabling).
+     */
     fun alterElement(reason: Reason = Reason.NONE) {
         mainActivity?.showToast(createMessage(mode, reason))
         mode = if (mode == Mode.EDITION) Mode.NONE else Mode.EDITION
@@ -160,6 +220,11 @@ class MainActivityPresenter {
         mainActivity?.notifyAlterModeEnabled(edit)
     }
 
+    /**
+     * selectedInCache works after long click to a node in cache view. This function starts logic
+     * according to the enabled mode.
+     * @param node is the tree node selected in CacheFragment.
+     */
     fun selectedInCache(node: TreeNodeWrapper) {
         selectedTreeNodeWrapper = node
         when (mode) {
@@ -185,6 +250,11 @@ class MainActivityPresenter {
         }
     }
 
+    /**
+     * nameEntered invokes after something was written in dialog. In common case it's when addition
+     * or edition is enabled.
+     * @param name is the name to be used for added (edited) node.
+     */
     fun nameEntered(name: String?) {
         when (mode) {
             Mode.ADDITION -> {
