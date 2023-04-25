@@ -233,8 +233,13 @@ class MainActivityPresenter {
                 cacheFragment?.showDialog()
             }
             Mode.EDITION -> {
-                cacheFragment?.setDialogTitle(R.string.dialog_edit)
-                cacheFragment?.showDialog()
+                if (!(selectedTreeNodeWrapper?.value as ElementCache).deleted) {
+                    cacheFragment?.setDialogTitle(R.string.dialog_edit)
+                    cacheFragment?.showDialog()
+                } else {
+                    selectedTreeNodeWrapper = null
+                    alterElement(Reason.ABORTED)
+                }
             }
             Mode.DELETION -> {
                 if (selectedTreeNodeWrapper != null) {
