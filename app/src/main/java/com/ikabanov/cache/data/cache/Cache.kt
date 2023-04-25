@@ -1,5 +1,6 @@
 package com.ikabanov.cache.data.cache
 
+import com.ikabanov.cache.ElementState
 import com.ikabanov.cache.Reason
 import com.ikabanov.cache.data.db.Element
 
@@ -25,7 +26,9 @@ object Cache : ICacheContract {
 
         val elementCache = ElementCache(element.name, parentElementName, element.deleted, level)
         if (!listOfNodes.contains(elementCache)) {
-            elementCache.newElement = !isFromDB
+            if (!isFromDB) {
+                elementCache.setState(ElementState.NEW_ELEMENT)
+            }
             listOfNodes.add(elementCache)
             return Reason.DONE
         }
@@ -37,7 +40,9 @@ object Cache : ICacheContract {
             return Reason.ABORTED
         }
         element.deleted = !element.deleted
-        element.modified = true
+        if (element.elementState != ElementState.NEW_ELEMENT) {
+            element.setState(ElementState.MODIFIED_ELEMENT)
+        }
         if (element.deleted) {
             for (child in element.children) {
                 delete(child)
@@ -54,15 +59,9 @@ object Cache : ICacheContract {
 
         val modifiedElement = listOfNodes[indexInCache]
         modifiedElement.newName = newName
-        modifiedElement.modified = true
+        modifiedElement.setState(ElementState.MODIFIED_ELEMENT)
 
         return Reason.DONE
-    }
-
-    override fun unmodifyElements() {
-        for (element in listOfNodes) {
-            element.modified = false
-        }
     }
 
     override fun clearCache() {

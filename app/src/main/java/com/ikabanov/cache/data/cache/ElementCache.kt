@@ -1,5 +1,7 @@
 package com.ikabanov.cache.data.cache
 
+import com.ikabanov.cache.ElementState
+
 /**
  * ElementCache is a model of cache element. Will be united to Element soon.
  */
@@ -19,11 +21,20 @@ data class ElementCache(var name: String) : Comparable<ElementCache> {
         this.level = level
     }
 
+    fun setState(state: ElementState) {
+        if (this.elementState != ElementState.NEW_ELEMENT) {
+            this.elementState = state
+        }
+        if (this.elementState != ElementState.MODIFIED_ELEMENT) {
+            this.elementState = state
+        }
+    }
+
+    var elementState = ElementState.NONE
+        private set
     var parentName: String = ""
         private set
-    var newElement: Boolean = false
     var newName: String? = null
-    var modified: Boolean = false
     var hasLocalParent = false
 
     override fun compareTo(other: ElementCache): Int {

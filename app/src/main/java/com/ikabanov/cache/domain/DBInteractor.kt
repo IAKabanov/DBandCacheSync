@@ -1,5 +1,6 @@
 package com.ikabanov.cache.domain
 
+import com.ikabanov.cache.ElementState
 import com.ikabanov.cache.data.cache.ElementCache
 import com.ikabanov.cache.data.db.DB
 import com.ikabanov.cache.data.db.Element
@@ -12,13 +13,13 @@ class DBInteractor : IDBInteractor {
     private val db: IdbContract = DB
     override fun addManyElements(elements: List<ElementCache>) {
         for (element in elements) {
-            if (element.modified) {
+            if (element.elementState == ElementState.MODIFIED_ELEMENT) {
                 val oldElement = Element(element.name)
                 val newElement = Element(element.newName ?: element.name)
                 newElement.deleted = element.deleted
                 db.updateElement(oldElement, newElement)
             }
-            if (element.newElement) {
+            if (element.elementState == ElementState.NEW_ELEMENT) {
                 if (!element.deleted) {
                     val newElement = Element(element.newName ?: element.name)
                     val potentialParent = element.parent
