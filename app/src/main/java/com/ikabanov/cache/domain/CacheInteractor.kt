@@ -16,8 +16,7 @@ class CacheInteractor : ICacheInteractor {
     }
 
     override fun getElementsWithTreeRelations(): List<ElementCache> {
-        return cache.getElements().toMutableList()
-            .sorted() // Sorted by its level in the tree. We need that for
+        return cache.getElementsWithTreeRelations()// Sorted by its level in the tree. We need that for
         // easier finding its relations.
     }
 

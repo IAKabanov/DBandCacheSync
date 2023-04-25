@@ -21,7 +21,11 @@ class DBInteractor : IDBInteractor {
             if (element.newElement) {
                 if (!element.deleted) {
                     val newElement = Element(element.newName ?: element.name)
-                    val parent = Element(element.parentName)
+                    val potentialParent = element.parent
+                    val parentName = if (potentialParent != null) {
+                        if (potentialParent.newName != null) potentialParent.newName else potentialParent.name
+                    } else element.parentName
+                    val parent = Element(parentName!!) // not null because of "if" above.
                     db.addElement(newElement, parent)
                 }
             }
