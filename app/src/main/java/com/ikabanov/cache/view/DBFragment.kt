@@ -30,8 +30,10 @@ class DBFragment : Fragment() {
         val recyclerView = view.findViewById<RecyclerView>(R.id.database)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.isNestedScrollingEnabled = true
+        val expand = resources.getText(R.string.expand).toString()
+        val collapse = resources.getText(R.string.collapse).toString()
         val factory =
-            TreeViewHolderFactory { v: View, _: Int -> DBViewHolder(v) }
+            TreeViewHolderFactory { v: View, _: Int -> DBViewHolder(v, expand, collapse) }
         treeViewAdapter = TreeViewAdapter(factory)
         recyclerView.adapter = treeViewAdapter
 

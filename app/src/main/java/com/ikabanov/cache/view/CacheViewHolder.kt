@@ -7,9 +7,11 @@ import com.amrdeveloper.treeview.TreeViewHolder
 import com.ikabanov.cache.R
 import com.ikabanov.cache.data.cache.ElementCache
 
-
-class CacheViewHolder(itemView: View) : TreeViewHolder(itemView) {
-
+class CacheViewHolder(
+    itemView: View,
+    private val expandStr: String,
+    private val collapseStr: String
+) : TreeViewHolder(itemView) {
     private var name: TextView
     private var expand: TextView
 
@@ -22,6 +24,12 @@ class CacheViewHolder(itemView: View) : TreeViewHolder(itemView) {
         super.bindTreeNode(node)
         val element = (node!!.value as ElementCache)
         val nameOfNode = if (element.newName != null) element.newName else element.name
+        if (node.children.isEmpty()) {
+            expand.visibility = View.GONE
+        } else {
+            expand.visibility = View.VISIBLE
+            expand.text = if (node.isExpanded) collapseStr else expandStr
+        }
         val styledText = StringBuffer()
 
         if ((node.value as ElementCache).deleted) {
