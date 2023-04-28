@@ -8,4 +8,5 @@ interface IdbContract {
     fun updateElement(oldElement: Element, newElement: Element)
     fun resetDB()
     fun getElements(): List<Element>
+    fun getLastID(): Int
 }

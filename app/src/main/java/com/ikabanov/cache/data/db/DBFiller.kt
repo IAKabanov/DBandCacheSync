@@ -6,13 +6,13 @@ package com.ikabanov.cache.data.db
 class DBFiller {
     companion object {
         fun createRoot(): List<Element> {
-            val element1 = Element("Node1", null)
-            val element2 = Element("Node2", element1)
-            val element3 = Element("Node3", element1)
-            val element4 = Element("Node4", element3)
-            val element5 = Element("Node5", element1)
-            val element6 = Element("Node6", element5)
-            val element7 = Element("Node7", element6)
+            val element1 = Element(0, "Node1", null)
+            val element2 = Element(1, "Node2", element1)
+            val element3 = Element(2, "Node3", element1)
+            val element4 = Element(3, "Node4", element3)
+            val element5 = Element(4, "Node5", element1)
+            val element6 = Element(5, "Node6", element5)
+            val element7 = Element(6, "Node7", element6)
 
             element1.addChild(element2)
             element1.addChild(element3)

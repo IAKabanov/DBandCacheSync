@@ -85,7 +85,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:text="@string/add"
+        android:text="@string/add_btn"
         app:layout_constraintBottom_toTopOf="@id/mark_delete_in_cache"
         app:layout_constraintStart_toStartOf="@id/guideline_start" />
 
@@ -94,7 +94,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:text="@string/delete"
+        android:text="@string/delete_btn"
         app:layout_constraintBottom_toTopOf="@id/alter_cache"
         app:layout_constraintStart_toEndOf="@id/guideline_start" />
 
@@ -102,7 +102,7 @@
         android:id="@+id/alter_cache"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/alter"
+        android:text="@string/alter_btn"
         app:layout_constraintBottom_toTopOf="@id/apply_cache"
         app:layout_constraintStart_toEndOf="@id/guideline_start" />
 
@@ -110,7 +110,7 @@
         android:id="@+id/apply_cache"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/apply_cache"
+        android:text="@string/apply_cache_btn"
         app:layout_constraintBottom_toTopOf="@id/reset_cache"
         app:layout_constraintStart_toEndOf="@id/guideline_start" />
 
@@ -118,7 +118,7 @@
         android:id="@+id/reset_cache"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/reset_cache"
+        android:text="@string/reset_cache_btn"
         app:layout_constraintBottom_toTopOf="@id/guideline_bottom"
         app:layout_constraintStart_toEndOf="@id/guideline_start" />
 
@@ -126,7 +126,7 @@
         android:id="@+id/reset_db"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/reset_db"
+        android:text="@string/reset_db_btn"
         app:layout_constraintBottom_toTopOf="@id/guideline_bottom"
         app:layout_constraintEnd_toEndOf="@id/guideline_end" />
 

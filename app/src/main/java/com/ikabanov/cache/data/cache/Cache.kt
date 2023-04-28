@@ -9,25 +9,30 @@ import com.ikabanov.cache.data.db.Element
  */
 object Cache : ICacheContract {
     private val listOfNodes = mutableListOf<ElementCache>()
+    private var newIDsCount: Int = 0
 
-    override fun add(element: Element, level: Int, isFromDB: Boolean): Reason {
-        val tempParent = element.parent
-        var parentElementName = "null"
-        if (tempParent != null) {
-            parentElementName = element.parent!!.name
-            val realParentIndex = listOfNodes.indexOf(ElementCache(tempParent.name))
-            if (realParentIndex != -1) {
-                val realParent = listOfNodes[realParentIndex]
-                if (realParent.deleted) {
+    override fun add(element: ElementCache, level: Int, lastIndexDB: Int): Reason {
+        val parentID = element.parentID
+        var shallBeDeleted = element.deleted
+        val realParentIndex = listOfNodes.indexOf(ElementCache(parentID))
+        val id = if (element.id == Element.NO_ID) lastIndexDB + 1 + newIDsCount else element.id
+        val isFromDB = lastIndexDB > id
+        if (realParentIndex != Element.NO_ID) {
+            val realParent = listOfNodes[realParentIndex]
+            if (realParent.deleted) {
+                if (!isFromDB) {
                     return Reason.ABORTED
                 }
+                shallBeDeleted = true
             }
         }
 
-        val elementCache = ElementCache(element.name, parentElementName, element.deleted, level)
+        val elementCache =
+            ElementCache(id, element.name, parentID, shallBeDeleted, level)
         if (!listOfNodes.contains(elementCache)) {
             if (!isFromDB) {
                 elementCache.setState(ElementState.NEW_ELEMENT)
+                newIDsCount++
             }
             listOfNodes.add(elementCache)
             return Reason.DONE
@@ -36,13 +41,11 @@ object Cache : ICacheContract {
     }
 
     override fun delete(element: ElementCache): Reason {
-        if ((element.parent != null) && (element.parent!!.deleted) && (element.deleted)) {
-            return Reason.ABORTED
+        if (element.deleted) {
+            return Reason.ABORTED // All the next logic is prepared to unmark as deleted in the cache.
         }
         element.deleted = !element.deleted
-        if (element.elementState != ElementState.NEW_ELEMENT) {
-            element.setState(ElementState.MODIFIED_ELEMENT)
-        }
+        element.setState(ElementState.MODIFIED_ELEMENT)
         if (element.deleted) {
             for (child in element.children) {
                 delete(child)
@@ -52,13 +55,17 @@ object Cache : ICacheContract {
     }
 
     override fun alter(element: ElementCache, newName: String): Reason {
+        if (element.deleted) {
+            return Reason.ABORTED // All the next logic is prepared to rename deleted element in the cache.
+        }
+
         val indexInCache = listOfNodes.indexOf(element)
         if (indexInCache == -1) {
             return Reason.ABORTED
         }
 
         val modifiedElement = listOfNodes[indexInCache]
-        modifiedElement.newName = newName
+        modifiedElement.name = newName
         modifiedElement.setState(ElementState.MODIFIED_ELEMENT)
 
         return Reason.DONE
@@ -66,6 +73,12 @@ object Cache : ICacheContract {
 
     override fun clearCache() {
         listOfNodes.clear()
+    }
+
+    override fun unmodifyCache() {
+        for (element in listOfNodes) {
+            element.setState(ElementState.NONE)
+        }
     }
 
     override fun getElements(): List<ElementCache> {
@@ -78,12 +91,15 @@ object Cache : ICacheContract {
         for (element in elements) {
             for (parentCandidate in elements) { // Go through all the elements to find an element that
                 if (parentCandidate.level == (element.level - 1)) { // has level less than the picked element
-                    if (element.parentName == parentCandidate.name) { // element knows its parent name, and if it's equals to the candidate
+                    if (element.parentID == parentCandidate.id) { // element knows its parent name, and if it's equals to the candidate
                         if (!parentCandidate.children.contains(element)) { // check whether we added this child to the parent
                             parentCandidate.children.add(element) // add to children list to the parent
                             element.hasLocalParent =
                                 true // that's a flag to define roots in future. E.g. two nodes, that isn't connected explicitly.
                             element.parent = parentCandidate
+                        }
+                        if (parentCandidate.deleted) {
+                            element.deleted = true
                         }
                         break // Parent has been found. No need to check the other parent candidates. Going to check a new element.
                     }
@@ -94,5 +110,9 @@ object Cache : ICacheContract {
             }
         }
         return elements
+    }
+
+    override fun getNewIDCount(): Int {
+        return newIDsCount
     }
 }

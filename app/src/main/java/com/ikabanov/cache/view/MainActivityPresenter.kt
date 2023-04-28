@@ -1,5 +1,6 @@
 package com.ikabanov.cache.view
 
+import android.content.res.Resources
 import com.amrdeveloper.treeview.TreeNode
 import com.ikabanov.cache.Mode
 import com.ikabanov.cache.R
@@ -16,8 +17,8 @@ class MainActivityPresenter {
     private var mainActivity: MainActivity? = null
     private var dbFragment: DBFragment? = null
     private var cacheFragment: CacheFragment? = null
-    private var dbInteractor: IDBInteractor = DBInteractor()
-    private var cacheInteractor: ICacheInteractor = CacheInteractor()
+    private lateinit var resources: Resources
+    private var interactor = Interactor()
     private var selectedTreeNodeWrapper: TreeNodeWrapper? = null
     private var mode = Mode.NONE
     private val PASS: Unit = Unit
@@ -32,18 +33,19 @@ class MainActivityPresenter {
         this.cacheFragment = cacheFragment
         this.dbFragment!!.presenter = this
         this.cacheFragment!!.presenter = this
+        this.resources = mainActivity.resources
     }
 
     /**
      * resetDB should reset DB, Cache and refresh both corresponding views.
      */
     fun resetDB() {
+        mainActivity?.showToast(resources.getString(R.string.reset_db))
+        interactor.resetDB()
         if (dbFragment != null) {
-            dbInteractor.resetDB()
             dbFragment?.refresh()
         }
         if (cacheFragment != null) {
-            cacheInteractor.clearCache()
             cacheFragment?.refresh()
         }
     }
@@ -52,7 +54,7 @@ class MainActivityPresenter {
      * fillCacheViewTree creates a tree to be shown in CacheFragment.
      */
     fun fillCacheViewTree(): List<TreeNode> {
-        val elementsSorted = cacheInteractor.getElementsWithTreeRelations()
+        val elementsSorted = interactor.getCacheElementsWithTreeRelations()
         return fillCacheViewTree(elementsSorted)
     }
 
@@ -79,7 +81,7 @@ class MainActivityPresenter {
      * fillDBViewTree creates a tree to be shown in DBFragment.
      */
     fun fillDBViewTree(): List<TreeNode> {
-        val elementsSorted = dbInteractor.getElementsWithTreeRelations()
+        val elementsSorted = interactor.getDBElementsWithTreeRelations()
         return fillDBViewTree(elementsSorted)
     }
 
@@ -107,7 +109,9 @@ class MainActivityPresenter {
      * creates the copy in Cache of the selected node in DB.
      */
     fun onSendToCacheTriggered(node: TreeNodeWrapper) {
-        cacheInteractor.addElement(node.value as Element, node.level, true)
+        val nodeValue = node.value as Element
+        interactor.sendElementFromDBToCache(nodeValue, node.level)
+        mainActivity?.showToast("${nodeValue.name} is being added to the cache...")
         cacheFragment?.refresh()
     }
 
@@ -115,31 +119,31 @@ class MainActivityPresenter {
      * applyCache moves all the data from Cache to the DB.
      */
     fun applyCache() {
-        val elementsSorted = cacheInteractor.getElementsWithTreeRelations()
-        dbInteractor.addManyElements(elementsSorted)
+        interactor.mergeCacheToDB()
         dbFragment?.refresh()
-        resetCache()
+        cacheFragment?.refresh()
+        mainActivity?.showToast(resources.getString(R.string.apply_cache))
     }
 
     private fun createMessage(mode: Mode, reason: Reason): String {
         return when (mode) {
             Mode.ADDITION -> when (reason) {
-                Reason.DONE -> "New node added in cache successfully."
-                Reason.DONE_NEGATIVE -> "How did you get there?!"
-                Reason.ABORTED -> "No nodes added."
-                Reason.NONE -> "Adding enabled. Push the node, child will be created."
+                Reason.DONE -> resources.getString(R.string.addition_done)
+                Reason.DONE_NEGATIVE -> resources.getString(R.string.reason_astonished)
+                Reason.ABORTED -> resources.getString(R.string.addition_aborted)
+                Reason.NONE -> resources.getString(R.string.addition_none)
             }
             Mode.EDITION -> when (reason) {
-                Reason.DONE -> "Node name changed in cache successfully"
-                Reason.DONE_NEGATIVE -> "How did you get there?!"
-                Reason.ABORTED -> "No nodes renamed"
-                Reason.NONE -> "Altering enabled. Push the node, it will be able to be edited."
+                Reason.DONE -> resources.getString(R.string.edition_done)
+                Reason.DONE_NEGATIVE -> resources.getString(R.string.reason_astonished)
+                Reason.ABORTED -> resources.getString(R.string.edition_aborted)
+                Reason.NONE -> resources.getString(R.string.edition_none)
             }
             Mode.DELETION -> when (reason) {
-                Reason.DONE -> "Node marked as deleted in cache successfully."
-                Reason.DONE_NEGATIVE -> "Node unmarked as deleted in cache successfully."
-                Reason.ABORTED -> "No nodes marked (unmarked) as deleted."
-                Reason.NONE -> "Deleting enabled. Push the node, it will be marked as deleted."
+                Reason.DONE -> resources.getString(R.string.deletion_done)
+                Reason.DONE_NEGATIVE -> resources.getString(R.string.deletion_done_negative)
+                Reason.ABORTED -> resources.getString(R.string.deletion_aborted)
+                Reason.NONE -> resources.getString(R.string.deletion_none)
             }
             Mode.NONE -> ""
         }
@@ -149,7 +153,7 @@ class MainActivityPresenter {
      * resetCache clears the Cache and aborts mode if enabled.
      */
     fun resetCache() {
-        cacheInteractor.clearCache()
+        interactor.clearCache()
         cacheFragment?.refresh()
 
         when (mode) {
@@ -158,28 +162,23 @@ class MainActivityPresenter {
             Mode.DELETION -> mainActivity?.notifyDeleteModeEnabled(false)
             Mode.NONE -> PASS // Nothing should happen.
         }
-        mainActivity?.showToast(createMessage(Mode.NONE, Reason.ABORTED))
+        mainActivity?.showToast(resources.getString(R.string.reset_cache))
+        //mainActivity?.showToast(createMessage(Mode.NONE, Reason.ABORTED))
         mode = Mode.NONE
     }
 
     private fun addElement(elementName: String): Reason {
         if (selectedTreeNodeWrapper != null) {
             val elementParent = selectedTreeNodeWrapper!!.value as ElementCache
-            return cacheInteractor.addElement(
-                Element(elementName, Element(elementParent.name, null)),
-                elementParent.level + 1
-            )
+            return interactor.addElementToCache(elementName, elementParent)
         }
         return Reason.ABORTED
     }
 
     private fun alterElement(elementName: String): Reason {
         if (selectedTreeNodeWrapper != null) {
-            val elementParent = selectedTreeNodeWrapper!!.value as ElementCache
-            return cacheInteractor.editElement(
-                ElementCache(elementParent.name, elementParent.parentName),
-                elementName
-            )
+            val element = selectedTreeNodeWrapper!!.value as ElementCache
+            return interactor.editElementInCache(elementName, element)
         }
         return Reason.ABORTED
     }
@@ -229,8 +228,13 @@ class MainActivityPresenter {
         selectedTreeNodeWrapper = node
         when (mode) {
             Mode.ADDITION -> {
-                cacheFragment?.setDialogTitle(R.string.dialog_add)
-                cacheFragment?.showDialog()
+                if (!(selectedTreeNodeWrapper?.value as ElementCache).deleted) {
+                    cacheFragment?.setDialogTitle(R.string.dialog_add)
+                    cacheFragment?.showDialog()
+                } else {
+                    selectedTreeNodeWrapper = null
+                    addElement(Reason.ABORTED)
+                }
             }
             Mode.EDITION -> {
                 if (!(selectedTreeNodeWrapper?.value as ElementCache).deleted) {
@@ -244,12 +248,11 @@ class MainActivityPresenter {
             Mode.DELETION -> {
                 if (selectedTreeNodeWrapper != null) {
                     val reason =
-                        cacheInteractor.deleteElement(selectedTreeNodeWrapper!!.value as ElementCache)
+                        interactor.deleteElementFromCache(selectedTreeNodeWrapper!!.value as ElementCache)
                     deleteElement(reason)
                     selectedTreeNodeWrapper = null
                     cacheFragment?.refresh()
                 }
-
             }
             Mode.NONE -> PASS
         }

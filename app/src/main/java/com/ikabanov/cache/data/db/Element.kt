@@ -3,14 +3,22 @@ package com.ikabanov.cache.data.db
 /**
  * Element is a model of db element. Will be united to ElementCache soon.
  */
-data class Element(var name: String) : Comparable<Element> {
+data class Element(val id: Int) : Comparable<Element> {
+    companion object {
+        const val NO_ID = -1
+    }
+    var name: String = ""
     var parent: Element? = null
         private set
     var level = 0
     var deleted: Boolean = false
     val children: MutableList<Element> = mutableListOf()
 
-    constructor(name: String, parent: Element?) : this(name) {
+    constructor(id: Int, name: String) : this(id) {
+        this.name = name
+    }
+
+    constructor(id: Int, name: String, parent: Element?) : this(id, name) {
         this.parent = parent
     }
 

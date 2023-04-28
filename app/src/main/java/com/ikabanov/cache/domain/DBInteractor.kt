@@ -14,20 +14,19 @@ class DBInteractor : IDBInteractor {
     override fun addManyElements(elements: List<ElementCache>) {
         for (element in elements) {
             if (element.elementState == ElementState.MODIFIED_ELEMENT) {
-                val oldElement = Element(element.name)
-                val newElement = Element(element.newName ?: element.name)
+                val oldElement = Element(element.id, element.name)
+                val newElement = Element(element.id, element.name)
                 newElement.deleted = element.deleted
                 db.updateElement(oldElement, newElement)
             }
             if (element.elementState == ElementState.NEW_ELEMENT) {
                 if (!element.deleted) {
-                    val newElement = Element(element.newName ?: element.name)
+                    val newElement = Element(element.id, element.name)
                     val potentialParent = element.parent
-                    val parentName = if (potentialParent != null) {
-                        if (potentialParent.newName != null) potentialParent.newName else potentialParent.name
-                    } else element.parentName
-                    val parent = Element(parentName!!) // not null because of "if" above.
-                    db.addElement(newElement, parent)
+                    if (potentialParent != null) {
+                        val parent = Element(potentialParent.id)
+                        db.addElement(newElement, parent)
+                    }
                 }
             }
         }
@@ -41,5 +40,9 @@ class DBInteractor : IDBInteractor {
 
     override fun resetDB() {
         db.resetDB()
+    }
+
+    override fun getLastID(): Int {
+        return db.getLastID()
     }
 }

@@ -7,7 +7,12 @@ import com.amrdeveloper.treeview.TreeViewHolder
 import com.ikabanov.cache.R
 import com.ikabanov.cache.data.db.Element
 
-class DBViewHolder(itemView: View, private val expandStr: String, private val collapseStr: String) :
+class DBViewHolder(
+    itemView: View,
+    private val expandStr: String,
+    private val collapseStr: String,
+    private val noChildrenStr: String
+) :
     TreeViewHolder(itemView) {
     private var name: TextView
     private var expand: TextView
@@ -21,9 +26,8 @@ class DBViewHolder(itemView: View, private val expandStr: String, private val co
         super.bindTreeNode(node)
         val fileNameStr = (node!!.value as Element).name
         if (node.children.isEmpty()) {
-            expand.visibility = View.GONE
+            expand.text = noChildrenStr
         } else {
-            expand.visibility = View.VISIBLE
             expand.text = if (node.isExpanded) collapseStr else expandStr
         }
         val styledText = StringBuffer()

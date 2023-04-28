@@ -10,7 +10,8 @@ import com.ikabanov.cache.data.cache.ElementCache
 class CacheViewHolder(
     itemView: View,
     private val expandStr: String,
-    private val collapseStr: String
+    private val collapseStr: String,
+    private val noChildrenStr: String
 ) : TreeViewHolder(itemView) {
     private var name: TextView
     private var expand: TextView
@@ -23,11 +24,10 @@ class CacheViewHolder(
     override fun bindTreeNode(node: TreeNode?) {
         super.bindTreeNode(node)
         val element = (node!!.value as ElementCache)
-        val nameOfNode = if (element.newName != null) element.newName else element.name
+        val nameOfNode = element.name
         if (node.children.isEmpty()) {
-            expand.visibility = View.GONE
+            expand.text = noChildrenStr
         } else {
-            expand.visibility = View.VISIBLE
             expand.text = if (node.isExpanded) collapseStr else expandStr
         }
         val styledText = StringBuffer()

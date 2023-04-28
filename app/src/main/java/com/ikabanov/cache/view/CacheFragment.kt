@@ -55,8 +55,9 @@ class CacheFragment : Fragment() {
         recyclerView.isNestedScrollingEnabled = true
         val expand = resources.getText(R.string.expand).toString()
         val collapse = resources.getText(R.string.collapse).toString()
+        val noChildren = resources.getText(R.string.no_child).toString()
         val factory =
-            TreeViewHolderFactory { v: View, _: Int -> CacheViewHolder(v, expand, collapse) }
+            TreeViewHolderFactory { v: View, _: Int -> CacheViewHolder(v, expand, collapse, noChildren) }
         treeViewAdapter = TreeViewAdapter(factory)
         recyclerView.adapter = treeViewAdapter
 

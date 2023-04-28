@@ -10,4 +10,5 @@ interface IDBInteractor {
     fun addManyElements(elements: List<ElementCache>)
     fun getElementsWithTreeRelations(): List<Element>
     fun resetDB()
+    fun getLastID(): Int
 }

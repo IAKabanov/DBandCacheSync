@@ -11,13 +11,14 @@ import com.ikabanov.cache.data.db.Element
  */
 class CacheInteractor : ICacheInteractor {
     val cache: ICacheContract = Cache
-    override fun addElement(element: Element, level: Int, isFromDB: Boolean): Reason {
-        return cache.add(element, level, isFromDB)
+
+    override fun addElement(element: Element, level: Int, lastID: Int): Reason {
+        val localElement = ElementCache.createFromElement(element)
+        return cache.add(localElement, level, lastID)
     }
 
     override fun getElementsWithTreeRelations(): List<ElementCache> {
-        return cache.getElementsWithTreeRelations()// Sorted by its level in the tree. We need that for
-        // easier finding its relations.
+        return cache.getElementsWithTreeRelations()
     }
 
     override fun clearCache() {
@@ -30,5 +31,13 @@ class CacheInteractor : ICacheInteractor {
 
     override fun editElement(oldElement: ElementCache, newName: String): Reason {
         return cache.alter(oldElement, newName)
+    }
+
+    override fun getNewElementsCount(): Int {
+        return cache.getNewIDCount()
+    }
+
+    override fun unmodifyCache() {
+        cache.unmodifyCache()
     }
 }
