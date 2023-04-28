@@ -45,6 +45,9 @@ object DB : IdbContract {
             return
         }
         val elementToBeUpdated = listOfNodes[elementToBeUpdatedIndex]
+        if (elementToBeUpdated.deleted) {
+            return
+        }
         elementToBeUpdated.name = newElement.name
         elementToBeUpdated.deleted = newElement.deleted
 
